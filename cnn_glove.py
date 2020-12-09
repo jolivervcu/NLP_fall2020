@@ -3,7 +3,8 @@ from tensorflow.keras import layers
 from tensorflow.keras.models import Sequential
 from tensorflow.keras.preprocessing.text import Tokenizer
 from tensorflow.keras.preprocessing.sequence import pad_sequences
-
+from tensorflow.keras import backend as k
+from tensorflow.keras import metrics
 import numpy as np
 import pandas as pd
 import preprocessor as p
@@ -95,11 +96,11 @@ model.add(layers.Embedding(vocab_size, embedding_dim,
 model.add(layers.Conv1D(128, 5, activation='relu'))
 model.add(layers.MaxPool1D())
 model.add(layers.Flatten())
-model.add(layers.Dense(20, activation='relu'))
-model.add(layers.Dense(1, activation='relu'))
+model.add(layers.Dense(20, activation='sigmoid'))
+model.add(layers.Dense(1, activation='sigmoid'))
 model.compile(optimizer='rmsprop',
               loss="binary_crossentropy",
-              metrics=['acc'])
+              metrics=['acc', metrics.Precision(), metrics.Recall()])
 model.summary()
 
 
@@ -111,10 +112,15 @@ history = model.fit(X_train, y_train,
                     verbose=False,
                     validation_data=(X_test, y_test),
                     batch_size=10)
-loss, accuracy = model.evaluate(X_train, y_train, verbose=False)
+loss, accuracy, precision, recall = model.evaluate(X_train, y_train, verbose=False)
 print("Training Accuracy: {:.4f}".format(accuracy))
-loss, accuracy = model.evaluate(X_test, y_test, verbose=False)
+print("Training precision: {:.4f}".format(precision))
+loss, accuracy, precision, recall = model.evaluate(X_test, y_test, verbose=False)
 print("Testing Accuracy:  {:.4f}".format(accuracy))
+print("Testing Precision:  {:.4f}".format(precision))
+print("Testing Recall:  {:.4f}".format(recall))
+F1 = 2 * (precision * recall) / (precision + recall)
+print(F1)
 #plot_history(history)
 
 

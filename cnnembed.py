@@ -3,7 +3,7 @@ from tensorflow.keras import layers
 from tensorflow.keras.models import Sequential
 from tensorflow.keras.preprocessing.text import Tokenizer
 from tensorflow.keras.preprocessing.sequence import pad_sequences
-
+from tensorflow.keras import metrics
 import pandas as pd
 import preprocessor as p
 from sklearn.model_selection import train_test_split
@@ -56,28 +56,6 @@ def plot_history(history):
     plt.legend()
 
 
-# #tokenize sentence of tweet
-# def tokenize_tweet(row):
-#     text = row['Text']
-#     text = sent_tokenize(text)
-#     return text
-#
-# #train_d['Text'] = train_d.apply(tokenize_tweet, axis=1)
-# #train_d['Text'] = test_d.apply(tokenize_tweet, axis=1)
-# #tokenize word of tweet
-# def tokenize_tweet_word(row):
-#     text = row['Text']
-#     text = word_tokenize(text)
-#     return text
-#
-# train_d['Text'] = train_d.apply(tokenize_tweet_word, axis=1)
-# test_d['Text'] = train_d.apply(tokenize_tweet_word, axis=1)
-# #print(train_d.head())
-# #print(test_d.head())
-#
-# #Word2Vec
-# word2vec_train_model = gensim.models.Word2Vec(train_d, min_count = 1, size = 100, window = 5)
-# word2vec_test_model = gensim.models.Word2Vec(test_d, min_count = 1, size = 100, window = 5)
 
 #Keras tokenizer
 tokenizer = Tokenizer(num_words=5000)
@@ -98,23 +76,27 @@ embedding_dim = 50
 #model #1 training accuracy = 0.4694, testing accuracy = 0.4792
 model = Sequential()
 model.add(layers.Embedding(vocab_size, embedding_dim, input_length=maxlen))
-model.add(layers.Conv1D(128, 5, activation='relu'))
+model.add(layers.Conv1D(64, 7, activation='relu'))
 model.add(layers.GlobalMaxPooling1D())
 model.add(layers.Dense(10, activation='relu'))
 model.add(layers.Dense(1, activation='sigmoid'))
 model.compile(optimizer='rmsprop',
               loss='binary_crossentropy',
-              metrics=['acc'])
+              metrics=['acc' ,metrics.Precision(), metrics.Recall()])
 
 model.summary()
 history = model.fit(X_train, y_train,
-                    epochs=10,
+                    epochs=20,
                     verbose=False,
                     validation_data=(X_test, y_test),
                     batch_size=10)
-loss, accuracy = model.evaluate(X_train, y_train, verbose=False)
+loss, accuracy, precision, recall = model.evaluate(X_train, y_train, verbose=False)
 print("Training Accuracy: {:.4f}".format(accuracy))
-loss, accuracy = model.evaluate(X_test, y_test, verbose=False)
+loss, accuracy, precision, recall = model.evaluate(X_test, y_test, verbose=False)
 print("Testing Accuracy:  {:.4f}".format(accuracy))
-plot_history(history)
+print("Testing Precision:  {:.4f}".format(precision))
+print("Testing Recall:  {:.4f}".format(recall))
+F1 = 2 * (precision * recall) / (precision + recall)
+print(F1)
+
 
